@@ -1,86 +1,88 @@
-import { apiAddToCart } from "@/apis";
+import apis from "@/apis";
 import { addToCart } from "@/app/interfaces/add-to-cart.model";
-import { apiBaseUrl, productImageUrl } from "@/Constants";
+import Header from "@/components/Header";
+import { productImageUrl } from "@/constants";
 import axios from "axios";
-import { usePathname, useSearchParams } from "expo-router/build/hooks";
+import { usePathname, useRouter, useSearchParams } from "expo-router/build/hooks";
+import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from "react";
 import { Alert, Button, Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
-export default function Shop() {
+export default function ProductDetails() {
   const [productDetails, setProductsDetails] = useState([]);
   const [addedToCart, setAddedToCart] = useState(false);
-  const [isHungry, setIsHungry] = useState(true);
   const [instructions, setInstructions] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [userId, setUserId] = useState('');
   
+  const router = useRouter();
   const params = useSearchParams();
   const getProductId = params.get('id');
   const pathName = usePathname();
   
   useEffect(() => {
-    const apiUrl = `${apiBaseUrl}product/${getProductId}`;
+    const apiUrl = `${apis.getAllProducts}/${getProductId}`;
     axios.get(apiUrl).then((res) => {
       setProductsDetails(res.data);
-    });
+    }).catch((err) => {
+      Alert.alert(err);
+    })
   }, []);
 
-  const addToCart = (apiData: addToCart) => {
-    axios.post(apiAddToCart, apiData).then((res) => {
-      if(res) {
+  const addToCart = async (apiData: addToCart) => {
+    let userId = await SecureStore.getItemAsync('userId');
+    axios.post(apis.addToCart, {...apiData, userId}).then((res) => {
+      if(res.data.type === 'success') {
         setAddedToCart(true);
         Alert.alert("", "Added Successfully", [
           {
-            text: 'Cancel',
-            onPress: () => console.log('Cancel Pressed'),
-            style: 'cancel',
+            text: 'Checkout',
+            onPress: () => router.push('/checkout'),
+            style: 'default',
           },
           {
-            text: 'OK', 
-            onPress: () => console.log('OK Pressed'),
+            text: 'Continue Shopping', 
+            onPress: () => router.back(),
             style: 'destructive'
           },
         ]);
       } else {
         setAddedToCart(false);
-        Alert.alert("", "Server error, try again", [
-          {
-            text: 'OK', 
-            onPress: () => console.log('OK Pressed'),
-            style: 'destructive'
-          },
-        ]);
+        Alert.alert(JSON.stringify(res.data));
       }
     });
   }
   
   return (
     <ScrollView>
-      <View style={styles.header}>
-        <Image source={require('../../../../assets/images/logo.jpg')} />
-      </View>
-      <View style={styles.container}>
-      {productDetails.length > 0 && productDetails.map((product:any, index) => {
-        return <View style={{flex : 1}} key={index}>
-          <View>
-            <Image source={{uri: productImageUrl+product?.article_no+'/front.jpg'}} style={{width: '100%', height: 500}} />
-          </View>
-          <View style={styles.productInfoWrap}>
-            <Text style={styles.productInfo}>
-              Article No: {product.article_no}
-            </Text>
-            <Text style={styles.productInfo}>
-              Price: {product.price_pkr}
-            </Text>
-            <Text style={styles.productInfo}>
-              Name: {product.product_name}
-            </Text>
-            <Text style={styles.productInfo}>
-              Quantity: <TextInput placeholder="number of sets" />
-            </Text>
-            <TextInput placeholder="Write instruction here" onChangeText={setInstructions} value={instructions} style={styles.textInput}></TextInput>
-          </View>
-          <Button onPress={() => {addToCart({pId: product.p_id, quantity: 1, userId: 2, instructions})}} title="add to cart" />
-        </View> 
-      })}
+      <Header />
+        <View style={styles.container}>
+        {productDetails.length > 0 && productDetails.map((product:any, index) => {
+          return (
+            <View style={{flex : 1}} key={index}>
+              <View>
+                <Image source={{uri: productImageUrl+product?.article_no+'/front.jpg'}} style={{width: '100%', height: 600}} />
+              </View>
+              <View style={styles.productInfoWrap}>
+                <Text style={styles.productInfo}>
+                  Article No: {product.article_no}
+                </Text>
+                <Text style={styles.productInfo}>
+                  Price: {product.price_pkr}
+                </Text>
+                <Text style={styles.productInfo}>
+                  Name: {product.product_name}
+                </Text>
+                <Text style={styles.productInfo}>
+                  Quantity: <TextInput placeholder="number of sets" onChangeText={setQuantity} value={quantity} keyboardType="numeric" style={styles.textInput} />
+                </Text>
+                <TextInput placeholder="Write instruction here" onChangeText={setInstructions} value={instructions} style={styles.textAreaInput}>
+                </TextInput>
+              </View>
+              <Button onPress={() => {addToCart({pId: product.p_id, quantity, userId, instructions})}} title="add to cart" />
+            </View>
+          )
+        })}
       </View>
     </ScrollView>
   );
@@ -88,7 +90,7 @@ export default function Shop() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginBottom:80,
+    paddingBottom:80
   },
   header : {
     padding : 20,
@@ -105,13 +107,20 @@ const styles = StyleSheet.create({
   },
   productInfo : {
     display: 'flex',
-    justifyContent: 'space-around',
     textAlign: 'left',
     padding: 10
   },
   textInput: {
     borderWidth: 1,
     borderColor: '#000',
-    minHeight: 100
+    width: '100%',
+    padding: 10
+  },
+  textAreaInput :{
+    borderWidth: 1,
+    borderColor: '#000',
+    minHeight: 100,
+    width: '100%',
+    padding: 10
   }
 })

@@ -1,59 +1,32 @@
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+import { styles } from "@/styles";
 import { Link } from "expo-router";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useState } from "react";
+import { RefreshControl, ScrollView, View } from "react-native";
 
 export default function HomeScreen() {
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+  
   return (
-    <ScrollView>
-      <View style={styles.header}>
-        <Image source={require('../assets/images/logo.jpg')} />
-      </View>
-      <Text style={styles.mainHeading}>Men</Text>
+    <ScrollView refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }>
+      <Header />
       <View style={styles.categoryBox}>
-        <Link href={{pathname: '/shop/[dept]/[cat]', params: {dept: 'men', cat : 'jeans-pants'}}} style={styles.categoryLink}>Jeans Pants</Link>
+        <Link href={{pathname: '/shop'}} style={styles.categoryLink}>Wholesale Shop</Link>
       </View>
-      <View style={styles.categoryBox}>
-        <Link href={{pathname: '/shop/[dept]/[cat]', params: {dept: 'men', cat : 'chino-pants'}}} style={styles.categoryLink}>Chino Pants</Link>
+      <View>
+        <Link href="/(app)">Logout</Link>
       </View>
-      <Text style={styles.mainHeading}>Boys</Text>
-      <View style={styles.categoryBox}>
-        <Link href={{pathname: '/shop/[dept]/[cat]', params: {dept: 'boys', cat : 'jeans-pants'}}} style={styles.categoryLink}>Jeans Pants</Link>
-      </View>
-      <View style={styles.categoryBox}>
-        <Link href={{pathname: '/shop/[dept]/[cat]', params: {dept: 'boys', cat : 'chino-pants'}}} style={styles.categoryLink}>Chino Pants</Link>
-      </View>
+      <Footer />
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  mainHeading: {
-    fontSize: 30,
-    lineHeight: 36,
-    textAlign: 'center',
-    marginBottom: 30
-  },
-  header : {
-    padding : 20,
-  },
-  categoryLink: {
-    flex: 1,
-    padding: 20,
-    textAlign: 'center',
-    fontSize: 25,
-    lineHeight: 30,
-    borderStyle: 'solid',
-    borderRadius: 10,
-    borderColor: '#ccc',
-    borderWidth: 2
-  },
-  categoryBox: {
-    marginBottom: 20
-  },
-  pageHeading : {
-    textAlign: 'center',
-    fontWeight: 'bold',
-    fontSize: 20,
-    lineHeight: 26,
-    marginBottom: 25
-  }
-})

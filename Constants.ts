@@ -1,3 +1,6 @@
 export const productImageUrl = 'https://www.pkapparel.com/uploads/';
-export const apiBaseUrl = 'https://api.pkapparel.com/';
-// export const apiBaseUrl = 'http://localhost:8000/';
+export const loginFormValidation = {
+  'required'        : 'Required',
+  'invalidEmail'    : 'Invalid Email',
+  'invalidForm'     : 'Wrong email/password'
+};

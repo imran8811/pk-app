@@ -1,7 +1,7 @@
 export type addToCart = {
   pId: string;
-  quantity: number;
-  userId: number;
+  quantity: string;
+  userId: string;
   instructions: string;
 }
 
